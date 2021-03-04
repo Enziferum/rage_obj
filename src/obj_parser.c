@@ -238,19 +238,17 @@ rage_obj_load_custom(const char* path, rage_obj_model* model, custom_buffer_pars
     model->face_vertices = 0;
 
 
-
-
     file = rage_open_file(path);
     if(!file)
         return 1;
 
-    {
-        const char* sep1;
-        const char* sep2;
-        const char* sep;
-        if(sep)
-            parse_data.base_path = string_substr(path, 0, sep - path + 1);
-    }
+//    {
+//        const char* sep1;
+//        const char* sep2;
+//        const char* sep;
+//        if(sep)
+//            parse_data.base_path = string_substr(path, 0, sep - path + 1);
+//    }
 
     buffer = (char*)(rage_memory_realloc(0, 2 * BUFFER_SZ * sizeof(char)));
     if(buffer == NULL)
@@ -259,7 +257,7 @@ rage_obj_load_custom(const char* path, rage_obj_model* model, custom_buffer_pars
     start = buffer;
 
     for(;;){
-        read = (rage_uint8)(rage_read_file(file, start, sizeof(buffer)));
+        read = (rage_uint8)(rage_read_file(file, start, BUFFER_SZ));
         if(read == 0 && start == buffer)
             break;
 

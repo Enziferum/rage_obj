@@ -19,11 +19,18 @@ and must not be misrepresented as being the original software.
 source distribution.
 *********************************************************************/
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "rage_obj/obj_parser.h"
 #include "parser.h"
 
 
 typedef unsigned int uint8;
+
+typedef struct{
+
+}obj_model;
 
 typedef struct{
     rage_obj_model* model;
@@ -32,6 +39,10 @@ typedef struct{
     char* base_path;
 }rage_parser_data;
 
+int
+is_digit(char c){
+    return (c >= '0' && c <= '9');
+}
 
 int
 is_newline(char c){
@@ -52,51 +63,147 @@ rage_skip_line(const char* ptr){
 
 const char*
 rage_skip_whitespace(const char* ptr){
-    while(!is_whitespace(*ptr))
+    while(is_whitespace(*ptr))
         ptr++;
     return ptr;
 }
 
 const char*
+rage_parse_int(const char* ptr, int* value){
+    int sign;
+
+    ptr = rage_skip_whitespace(ptr);
+
+    switch (*ptr) {
+        case '+':
+            sign = 1;
+        case '-':
+            sign = -1;
+        default:
+            sign = 1;
+    }
+
+    int num = 0;
+    while (is_digit(*ptr))
+        num = 10 * num + (int)(*ptr++ - '0');
+
+    *value = num;
+    return ptr;
+}
+
+const char*
 rage_parse_float(const char* ptr, float* value){
+    double sign;
+    ptr = rage_skip_whitespace(ptr);
+
+    switch (*ptr) {
+        case '+':
+            sign = 1.0;
+            ptr++;
+            break;
+        case '-':
+            sign = -1.0;
+            ptr++;
+            break;
+        default:
+            sign = 1.0;
+    }
+
+    double num = 0.0;
+    while (is_digit(*ptr))
+        num = 10 * num + (double)(*ptr++ - '0');
+
+    if(*ptr == '.')
+        ptr++;
+
+    //now we are work on fraction
+    double frac = 0.0;
+    double div = 1.0;
+
+    while (is_digit(*ptr)){
+        frac = 10.0 * frac + (double)(*ptr++ - '0');
+        div *= 10.0;
+    }
+
+    num += frac / div;
+
+    //todo if exponent ??
+
+
+    *value = (float)(sign * num);
+
 
     return ptr;
 }
 
 const char*
 rage_parse_vertex(rage_parser_data* data, const char* ptr){
+    float value;
 
+    printf("%s", "vertex info := ");
     for(uint8 it = 0; it < 3; ++it){
-        float value;
         ptr = rage_parse_float(ptr, &value);
-
+        printf("%f ", value);
     }
 
+    printf("\n");
     return ptr;
 }
 
 const char*
 rage_parse_texcoord(rage_parser_data* data, const char* ptr){
-
+    printf("%s", "texcoord info := ");
     for(short it = 0; it < 2; ++it){
         float value;
         ptr = rage_parse_float(ptr, &value);
+        printf("%f ", value);
     }
-
+    printf("\n");
     return ptr;
 }
 
-const char* rage_parse_normal(rage_parser_data* data, const char* ptr){
+const char*
+rage_parse_normal(rage_parser_data* data, const char* ptr){
+    printf("%s", "normal info := ");
     for(uint8 it = 0; it < 3; ++it){
         float value;
         ptr = rage_parse_float(ptr, &value);
-
+        printf("%f ", value);
     }
+    printf("\n");
     return ptr;
 }
 
 
+const char*
+rage_parse_face(rage_parser_data* data, const char* ptr){
+    ptr = rage_skip_whitespace(ptr);
+    int count = 0;
 
+    while (!is_newline(*ptr)){
+
+        //process
+
+        count++;
+        ptr = rage_skip_whitespace(ptr);
+    }
+    return ptr;
+}
+
+const char*
+rage_parse_mtllib(rage_parser_data* data, const char* ptr){
+    ptr = rage_skip_whitespace(ptr);
+    const char* start = ptr;
+    ptr = rage_skip_line(ptr);
+
+    size_t dist = (size_t)(ptr - start - 1);
+    char* mtllib_name = (char*)(malloc(dist+1));
+    mtllib_name[dist] = '\0';
+    memcpy(mtllib_name, start, dist);
+
+    //open file
+    return ptr;
+}
 
 //here we are line by line
 void
@@ -109,6 +216,7 @@ rage_obj_custom_parser(void* data, const char* buffer, const char* end){
         ptr = rage_skip_whitespace(ptr);
         switch(*ptr){
             case 'v':
+                ptr++;
                 switch (*ptr++) {
                     case ' ':
                     case '\t':
@@ -128,12 +236,20 @@ rage_obj_custom_parser(void* data, const char* buffer, const char* end){
                 }
                 break;
             case 'f':
-                break;
+                ptr++;
+
             case 'u':
                 break;
             case 'm':
-                break;
-            case 'o':
+                if(ptr[1] == 't'
+                    && ptr[2] == 'l'
+                    && ptr[3] == 'l'
+                    && ptr[4] == 'i'
+                    && ptr[5] == 'b')
+                {
+                    ptr += 6;
+                    rage_parse_mtllib(parser_data, ptr);
+                }
                 break;
             case '#':
                 break;

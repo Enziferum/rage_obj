@@ -82,7 +82,7 @@ void model_test(){
     int code = rage_obj_load_custom(path, &model, rage_obj_custom_parser);
 
     std::cout << rage_obj_err(code) << std::endl;
-    print_model_info(&model);
+    //print_model_info(&model);
 }
 
 
@@ -99,14 +99,17 @@ typedef struct{
 rage_array*
 rage_array_new(size_t elem_sz){
     rage_array* arr = (rage_array*)(malloc(sizeof(rage_array)));
+
     if(!arr)
         return NULL;
+
     arr->elems = 0;
     arr->elem_sz = elem_sz;
     //1kb of memory
     arr->reverse_sz = 1024;
     arr->capelems_sz = arr->reverse_sz;
     arr->buffer = (unsigned char*)(malloc(arr->capelems_sz * arr->elem_sz));
+
     if(!arr->buffer)
         return NULL;
 
@@ -169,7 +172,7 @@ array_test(){
 
 
 int main() {
-    array_test();
+    model_test();
     return 0;
 }
 
