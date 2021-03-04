@@ -1,7 +1,15 @@
-cmake_minimum_required(VERSION 3.16)
-project(obj_parser)
+cmake_minimum_required(VERSION 3.12)
+project(rage_obj C)
 
-set(CMAKE_CXX_STANDARD 14)
+option(BUILD_DEMO "Build demo project ?" ON)
 
-set(SRC obj_parser.cpp main.cpp)
-add_executable(${PROJECT_NAME} ${SRC})
+set(CMAKE_C_STANDARD 99)
+file(GLOB SRC src/*.c)
+
+add_library(${PROJECT_NAME} ${SRC})
+target_include_directories(${PROJECT_NAME} PUBLIC
+        ${CMAKE_SOURCE_DIR}/incl)
+
+if(BUILD_DEMO)
+    add_subdirectory(demo)
+endif()
